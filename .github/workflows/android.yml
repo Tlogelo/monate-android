@@ -2,10 +2,8 @@ name: Android CI
 
 on:
   push:
-    branches: [ "main", "master", "develop" ]
+    branches: [ "**" ]
   pull_request:
-    branches: [ "main", "master", "develop" ]
-
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
