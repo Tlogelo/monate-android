@@ -63,3 +63,5 @@ sent back to development for correction.
 Mentor: Lukheli
 
 Tlogelo Molele, Katlego Motsoaledi, Tshimologo Mokiba, Mmakwena Masenya
+
+link to the video test: https://youtu.be/3pWunbYNS38?si=h-RGX4jbppN9Qdj1
