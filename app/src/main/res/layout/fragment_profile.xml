@@ -43,6 +43,14 @@
                 android:layout_height="wrap_content"
                 android:textColor="@color/monate_grey"
                 android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/tvProvider"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/monate_grey"
+                android:textSize="12sp"
+                android:visibility="gone" />
         </LinearLayout>
 
         <!-- Loyalty -->
@@ -171,6 +179,7 @@
 
         <!-- Change password -->
         <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardChangePassword"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
@@ -284,6 +293,43 @@
                     android:layout_marginTop="8dp"
                     android:minHeight="48dp"
                     android:text="Order status notifications" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:hint="Default collection time">
+
+                    <AutoCompleteTextView
+                        android:id="@+id/dropdownDefaultTime"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="none" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:hint="Default payment method">
+
+                    <AutoCompleteTextView
+                        android:id="@+id/dropdownDefaultPayment"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="none" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnDeleteAccount"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Delete my account"
+                    android:textColor="@color/monate_red" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 

@@ -10,7 +10,8 @@ import com.example.monatechickensteak.model.FoodItem
 import com.example.monatechickensteak.util.toRand
 
 class FoodAdapter(
-    private val onAdd: (FoodItem) -> Unit
+    private val onAdd: (FoodItem) -> Unit,
+    private val onOpen: (FoodItem) -> Unit
 ) : ListAdapter<FoodItem, FoodAdapter.VH>(Diff) {
 
     class VH(val binding: ItemFoodBinding) : RecyclerView.ViewHolder(binding.root)
@@ -27,6 +28,7 @@ class FoodAdapter(
             tvDescription.text = item.description
             tvPrice.text = item.price.toRand()
             btnAdd.setOnClickListener { onAdd(item) }
+            root.setOnClickListener { onOpen(item) }
         }
     }
 

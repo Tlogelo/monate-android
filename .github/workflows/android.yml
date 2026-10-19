@@ -4,9 +4,20 @@ on:
   push:
     branches: [ "**" ]
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A newer push to the same branch cancels the older run
+concurrency:
+  group: android-ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
 
     steps:
       - name: Check out the code
@@ -18,7 +29,7 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - name: Set up Gradle
+      - name: Set up Gradle (with build cache)
         uses: gradle/actions/setup-gradle@v4
 
       - name: Accept Android SDK licences
@@ -27,11 +38,33 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x gradlew
 
+      # Automated testing: password hashing, validators, login/register/Google sign-in rules,
+      # orders, loyalty, support and the "10+ records per table" database check.
       - name: Run unit tests
         run: ./gradlew testDebugUnitTest
 
       - name: Build debug APK
         run: ./gradlew assembleDebug
+
+      - name: Show test results in the run summary
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import glob, os, xml.etree.ElementTree as ET
+          total = failed = skipped = 0
+          rows = []
+          for f in sorted(glob.glob("app/build/test-results/testDebugUnitTest/*.xml")):
+              s = ET.parse(f).getroot()
+              t, fl, e, sk = (int(s.get(k, 0)) for k in ("tests", "failures", "errors", "skipped"))
+              total += t; failed += fl + e; skipped += sk
+              rows.append((s.get("name"), t, fl + e, sk))
+          out = ["## Unit test results", "",
+                 f"**{total} tests, {failed} failed, {skipped} skipped**", "",
+                 "| Test class | Tests | Failed | Skipped |", "|---|---:|---:|---:|"]
+          out += [f"| {n} | {t} | {fl} | {sk} |" for n, t, fl, sk in rows]
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as fh:
+              fh.write("\n".join(out) + "\n")
+          PY
 
       - name: Upload test report
         if: always()

@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -10,7 +11,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.monatechickensteak"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -38,43 +39,42 @@ android {
 
 dependencies {
     // Core / UI
-    implementation("androidx.core:core-ktx:1.13.1")
-    implementation("androidx.appcompat:appcompat:1.7.0")
-    implementation("com.google.android.material:material:1.12.0")
-    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
-    implementation("androidx.recyclerview:recyclerview:1.3.2")
-    implementation("androidx.cardview:cardview:1.0.0")
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.material)
+    implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.recyclerview)
 
     // Navigation (moving between screens)
-    implementation("androidx.navigation:navigation-fragment-ktx:2.7.7")
-    implementation("androidx.navigation:navigation-ui-ktx:2.7.7")
+    implementation(libs.androidx.navigation.fragment.ktx)
+    implementation(libs.androidx.navigation.ui.ktx)
 
-    // ViewModel + LiveData (keeps screen data alive on rotation)
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.4")
-    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.4")
-    implementation("androidx.fragment:fragment-ktx:1.8.2")
+    // ViewModel + LiveData + Fragment helpers
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.androidx.lifecycle.livedata.ktx)
+    implementation(libs.androidx.fragment.ktx)
 
-    // Coroutines (doing network work off the main thread)
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+    // Coroutines (database work off the main thread)
+    implementation(libs.kotlinx.coroutines.android)
 
-    // Networking (talking to the Flask API)
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+    // Secure storage for the session and settings
+    implementation(libs.androidx.security.crypto)
 
-    // Images
-    implementation("io.coil-kt:coil:2.6.0")
+    // Single sign-on with Google (Credential Manager)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
 
-    // Secure storage for the login token
-    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+    // Firebase (online login)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
 
-    // Google Sign-In (SSO)
-    implementation("com.google.android.gms:play-services-auth:21.2.0")
+    // Unit tests (run on the laptop and in GitHub Actions)
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.androidx.arch.core.testing)
 
-    // Testing
-    testImplementation("junit:junit:4.13.2")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
-    testImplementation("androidx.arch.core:core-testing:2.2.0")
-    androidTestImplementation("androidx.test.ext:junit:1.2.1")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.0")
+    // Instrumented tests (run on a phone or emulator)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
 }

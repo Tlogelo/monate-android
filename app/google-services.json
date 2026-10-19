@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "1086089905792",
+    "project_id": "monatechickensteak-176f8",
+    "storage_bucket": "monatechickensteak-176f8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1086089905792:android:9e24c4eeff26447f35c865",
+        "android_client_info": {
+          "package_name": "com.example.monatechickensteak"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1086089905792-ckjdj05e58gqdq1rann5dlktqpu8ugt1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.monatechickensteak",
+            "certificate_hash": "47539fce22027449324b4ee9b6e3fa6cf851de2a"
+          }
+        },
+        {
+          "client_id": "1086089905792-vn41d0r9qknvalkrhbg9v6790l42ssj8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAAFB4SSqmbM5IZeCcAHrWv4hZ100MnHSQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1086089905792-vn41d0r9qknvalkrhbg9v6790l42ssj8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

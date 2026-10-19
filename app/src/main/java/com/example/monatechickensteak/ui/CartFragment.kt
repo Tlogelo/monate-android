@@ -1,8 +1,5 @@
 package com.example.monatechickensteak.ui
 
-import com.example.monatechickensteak.data.AuthRepository
-import com.example.monatechickensteak.data.SessionManager
-import com.example.monatechickensteak.util.LoyaltyRules
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -10,16 +7,24 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.RadioButton
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.monatechickensteak.R
+import com.example.monatechickensteak.data.AuthRepository
 import com.example.monatechickensteak.data.CartManager
 import com.example.monatechickensteak.data.OrderRepository
+import com.example.monatechickensteak.data.SessionManager
 import com.example.monatechickensteak.databinding.FragmentCartBinding
+import com.example.monatechickensteak.util.CheckoutOptions
 import com.example.monatechickensteak.util.CheckoutValidator
+import com.example.monatechickensteak.util.LoyaltyRules
 import com.example.monatechickensteak.util.toRand
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class CartFragment : Fragment() {
 
@@ -27,13 +32,6 @@ class CartFragment : Fragment() {
     private val binding get() = _binding!!
 
     private lateinit var adapter: CartAdapter
-
-    private val timeOptions = listOf(
-        "As soon as possible",
-        "In 15 minutes",
-        "In 30 minutes",
-        "In 1 hour"
-    )
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -55,11 +53,22 @@ class CartFragment : Fragment() {
         binding.rvCart.layoutManager = LinearLayoutManager(requireContext())
         binding.rvCart.adapter = adapter
 
-        // Collection time dropdown
+        // Collection time dropdown, starting on the customer's default from Settings
         binding.dropdownTime.setAdapter(
-            ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, timeOptions)
+            ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, CheckoutOptions.collectionTimes)
         )
-        binding.dropdownTime.setText(timeOptions.first(), false)
+        binding.dropdownTime.setText(CheckoutOptions.validTime(SessionManager.defaultCollectionTime()), false)
+
+        // Pre-select the default payment method from Settings (if one was chosen)
+        val defaultPayment = CheckoutOptions.validPaymentOrNull(SessionManager.defaultPayment())
+        if (defaultPayment != null) {
+            for (i in 0 until binding.rgPayment.childCount) {
+                val child = binding.rgPayment.getChildAt(i)
+                if (child is RadioButton && child.text.toString() == defaultPayment) {
+                    child.isChecked = true
+                }
+            }
+        }
 
         binding.btnBrowse.setOnClickListener { findNavController().navigate(R.id.menuFragment) }
         binding.btnPlaceOrder.setOnClickListener { placeOrder() }
@@ -87,35 +96,53 @@ class CartFragment : Fragment() {
         val payment = selectedPayment()
 
         val error = CheckoutValidator.error(items.isEmpty(), payment)
-        if (error != null) {
-            Snackbar.make(binding.root, error, Snackbar.LENGTH_LONG).show()
+        if (error != null || payment == null) {
+            Snackbar.make(binding.root, error ?: "Choose a payment method", Snackbar.LENGTH_LONG).show()
             return
         }
 
-        val order = OrderRepository.placeOrder(
-            items = items,
-            total = CartManager.total(),
-            collectionTime = binding.dropdownTime.text.toString(),
-            paymentMethod = payment!!
-        )
-        val earned = LoyaltyRules.pointsForOrder(order.total)
-        AuthRepository.addLoyaltyPoints(SessionManager.userEmail(), earned)
-        CartManager.clear()
+        val userId = SessionManager.userId()
+        val total = CartManager.total()
+        val collectionTime = binding.dropdownTime.text.toString()
 
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Order placed! 🎉")
-            .setMessage(
-                "Order #${order.id}\n" +
-                        "Total: ${order.total.toRand()}\n" +
-                        "Collection: ${order.collectionTime}\n" +
-                        "Payment: ${order.paymentMethod}\n" +
-                        "Loyalty points earned: +$earned"
-            )
-            .setCancelable(false)
-            .setPositiveButton("Track order") { _, _ ->
-                findNavController().navigate(R.id.ordersFragment)
+        binding.btnPlaceOrder.isEnabled = false
+        viewLifecycleOwner.lifecycleScope.launch {
+            // NonCancellable: once the customer taps Place order, the order and the points
+            // are always saved together, even if they leave the screen at that moment.
+            val result = withContext(NonCancellable) {
+                try {
+                    val order = OrderRepository.placeOrder(userId, items, total, collectionTime, payment)
+                    val earned = LoyaltyRules.pointsForOrder(order.total)
+                    AuthRepository.addLoyaltyPoints(userId, earned)
+                    order to earned
+                } catch (e: Exception) {
+                    null
+                }
             }
-            .show()
+            if (result == null) {
+                binding.btnPlaceOrder.isEnabled = true
+                Snackbar.make(binding.root, "Could not place the order. Please try again.", Snackbar.LENGTH_LONG).show()
+                return@launch
+            }
+            val (order, earned) = result
+            CartManager.clear()
+            binding.btnPlaceOrder.isEnabled = true
+
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Order placed! 🎉")
+                .setMessage(
+                    "Order #${order.id}\n" +
+                            "Total: ${order.total.toRand()}\n" +
+                            "Collection: ${order.collectionTime}\n" +
+                            "Payment: ${order.paymentMethod}\n" +
+                            "Loyalty points earned: +$earned"
+                )
+                .setCancelable(false)
+                .setPositiveButton("Track order") { _, _ ->
+                    findNavController().navigate(R.id.ordersFragment)
+                }
+                .show()
+        }
     }
 
     override fun onDestroyView() {

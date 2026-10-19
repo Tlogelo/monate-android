@@ -1,13 +1,13 @@
 package com.example.monatechickensteak.data
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import com.example.monatechickensteak.model.CartItem
 import com.example.monatechickensteak.model.Order
 import com.example.monatechickensteak.model.OrderStatus
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /** The step that follows this one, or null when the order is already delivered. */
 fun OrderStatus.next(): OrderStatus? = when (this) {
@@ -17,72 +17,34 @@ fun OrderStatus.next(): OrderStatus? = when (this) {
     OrderStatus.DELIVERED -> null
 }
 
-/**
- * MOCK order book. When the Flask API is ready, placeOrder() and the status
- * updates will come from Retrofit and the rest of the app will not change.
- */
+/** Orders belong to the customer who placed them. Each customer only sees their own. */
 object OrderRepository {
 
-    private const val FIRST_ORDER_ID = 1001
+    lateinit var store: OrderStore
 
-    private val _orders = MutableLiveData<List<Order>>(seedOrders())
-    val orders: LiveData<List<Order>> = _orders
+    suspend fun ordersFor(userId: Int): List<Order> = withContext(Dispatchers.IO) {
+        store.forUser(userId)
+    }
 
-    private var nextId = FIRST_ORDER_ID
-
-    // Two past orders so the history screen has something to show.
-    private fun seedOrders(): List<Order> = listOf(
-        Order(
-            id = 902,
-            items = listOf(CartItem(MockData.menu[1], 1), CartItem(MockData.menu[5], 2)),
-            total = 245.0,
-            collectionTime = "In 30 minutes",
-            paymentMethod = "Card Payment",
-            status = OrderStatus.DELIVERED,
-            placedAt = "04 Oct 2026, 13:05"
-        ),
-        Order(
-            id = 901,
-            items = listOf(CartItem(MockData.menu[0], 1), CartItem(MockData.menu[9], 1)),
-            total = 125.0,
-            collectionTime = "As soon as possible",
-            paymentMethod = "Cash on Collection",
-            status = OrderStatus.DELIVERED,
-            placedAt = "01 Oct 2026, 18:20"
-        )
-    )
-
-    fun placeOrder(
+    suspend fun placeOrder(
+        userId: Int,
         items: List<CartItem>,
         total: Double,
         collectionTime: String,
         paymentMethod: String
-    ): Order {
+    ): Order = withContext(Dispatchers.IO) {
         val placedAt = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault()).format(Date())
-        val order = Order(
-            id = nextId++,
-            items = items,
-            total = total,
-            collectionTime = collectionTime,
-            paymentMethod = paymentMethod,
-            status = OrderStatus.RECEIVED,
-            placedAt = placedAt
-        )
-        // newest order goes to the top of the list
-        _orders.value = listOf(order) + (_orders.value ?: emptyList())
-        return order
+        store.insert(userId, items, total, collectionTime, paymentMethod, placedAt)
     }
 
-    /** Moves one order to its next status. Orders already delivered are left alone. */
-    fun advanceStatus(orderId: Int) {
-        _orders.value = (_orders.value ?: emptyList()).map { order ->
-            val next = order.status.next()
-            if (order.id == orderId && next != null) order.copy(status = next) else order
-        }
-    }
-
-    fun reset() {
-        _orders.value = emptyList()
-        nextId = FIRST_ORDER_ID
+    /**
+     * Moves one order to its next status and returns it. Orders already delivered are
+     * left alone. Returns null when the order does not exist.
+     */
+    suspend fun advanceStatus(orderId: Int): Order? = withContext(Dispatchers.IO) {
+        val order = store.find(orderId) ?: return@withContext null
+        val next = order.status.next() ?: return@withContext order
+        store.updateStatus(orderId, next)
+        order.copy(status = next)
     }
 }

@@ -65,7 +65,7 @@ class RegisterFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             when (val result = AuthRepository.register(name, email, password)) {
                 is AuthResult.Success -> {
-                    SessionManager.saveSession(result.user.name, result.user.email)
+                    SessionManager.saveSession(result.user)
                     findNavController().navigate(R.id.action_register_to_home)
                 }
                 is AuthResult.Error -> {

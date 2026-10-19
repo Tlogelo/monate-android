@@ -9,6 +9,8 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.monatechickensteak.R
+import com.example.monatechickensteak.auth.GoogleSignInHelper
+import com.example.monatechickensteak.auth.GoogleSignInResult
 import com.example.monatechickensteak.data.AuthRepository
 import com.example.monatechickensteak.data.AuthResult
 import com.example.monatechickensteak.data.SessionManager
@@ -35,6 +37,7 @@ class LoginFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         binding.btnLogin.setOnClickListener { attemptLogin() }
+        binding.btnGoogle.setOnClickListener { signInWithGoogle() }
         binding.tvRegister.setOnClickListener {
             findNavController().navigate(R.id.action_login_to_register)
         }
@@ -58,7 +61,7 @@ class LoginFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             when (val result = AuthRepository.login(email, password)) {
                 is AuthResult.Success -> {
-                    SessionManager.saveSession(result.user.name, result.user.email)
+                    SessionManager.saveSession(result.user)
                     findNavController().navigate(R.id.action_login_to_home)
                 }
                 is AuthResult.Error -> {
@@ -69,9 +72,37 @@ class LoginFragment : Fragment() {
         }
     }
 
+    private fun signInWithGoogle() {
+        setLoading(true)
+        viewLifecycleOwner.lifecycleScope.launch {
+            val google = GoogleSignInHelper.signIn(
+                requireActivity(), getString(R.string.google_web_client_id)
+            )
+            when (google) {
+                is GoogleSignInResult.Failure -> {
+                    setLoading(false)
+                    Snackbar.make(binding.root, google.message, Snackbar.LENGTH_LONG).show()
+                }
+                is GoogleSignInResult.Success -> {
+                    when (val result =AuthRepository.signInWithGoogle(google.email, google.name, google.idToken)) {
+                        is AuthResult.Success -> {
+                            SessionManager.saveSession(result.user)
+                            findNavController().navigate(R.id.action_login_to_home)
+                        }
+                        is AuthResult.Error -> {
+                            setLoading(false)
+                            Snackbar.make(binding.root, result.message, Snackbar.LENGTH_LONG).show()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private fun setLoading(loading: Boolean) {
         binding.progress.visibility = if (loading) View.VISIBLE else View.GONE
         binding.btnLogin.isEnabled = !loading
+        binding.btnGoogle.isEnabled = !loading
     }
 
     override fun onDestroyView() {

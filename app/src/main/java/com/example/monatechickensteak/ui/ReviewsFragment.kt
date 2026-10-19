@@ -7,9 +7,10 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.monatechickensteak.data.AuthRepository
-import com.example.monatechickensteak.data.MockData
+import com.example.monatechickensteak.data.CatalogRepository
 import com.example.monatechickensteak.data.ReviewRepository
 import com.example.monatechickensteak.data.SessionManager
 import com.example.monatechickensteak.databinding.FragmentReviewsBinding
@@ -17,6 +18,7 @@ import com.example.monatechickensteak.util.LoyaltyRules
 import com.example.monatechickensteak.util.ReviewValidator
 import com.google.android.material.snackbar.Snackbar
 import java.util.Locale
+import kotlinx.coroutines.launch
 
 class ReviewsFragment : Fragment() {
 
@@ -41,25 +43,29 @@ class ReviewsFragment : Fragment() {
         binding.rvReviews.layoutManager = LinearLayoutManager(requireContext())
         binding.rvReviews.adapter = adapter
 
-        val choices = listOf("Overall experience") + MockData.menu.map { it.name }
-        binding.dropdownItem.setAdapter(
-            ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, choices)
-        )
-        binding.dropdownItem.setText(choices.first(), false)
-
         binding.etComment.doAfterTextChanged { binding.tilComment.error = null }
         binding.btnSubmit.setOnClickListener { submit() }
 
-        ReviewRepository.reviews.observe(viewLifecycleOwner) { list ->
-            adapter.submitList(list)
-            binding.tvAverage.text = if (list.isEmpty()) {
-                "No reviews yet. Be the first!"
-            } else {
-                String.format(
-                    Locale.US, "%.1f ★  (%d reviews)",
-                    ReviewRepository.averageRating(), list.size
-                )
-            }
+        viewLifecycleOwner.lifecycleScope.launch {
+            val choices = listOf("Overall experience") + CatalogRepository.menu().map { it.name }
+            binding.dropdownItem.setAdapter(
+                ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, choices)
+            )
+            binding.dropdownItem.setText(choices.first(), false)
+            loadReviews()
+        }
+    }
+
+    private suspend fun loadReviews() {
+        val list = ReviewRepository.all()
+        adapter.submitList(list)
+        binding.tvAverage.text = if (list.isEmpty()) {
+            "No reviews yet. Be the first!"
+        } else {
+            String.format(
+                Locale.US, "%.1f ★  (%d reviews)",
+                ReviewRepository.averageRating(list), list.size
+            )
         }
     }
 
@@ -79,17 +85,21 @@ class ReviewsFragment : Fragment() {
         }
         if (itemError != null || ratingError != null || commentError != null) return
 
+        val userId = SessionManager.userId()
         val author = SessionManager.userName().ifBlank { "Customer" }
-        ReviewRepository.add(item!!, rating, comment.trim(), author)
-        AuthRepository.addLoyaltyPoints(SessionManager.userEmail(), LoyaltyRules.POINTS_PER_REVIEW)
+        viewLifecycleOwner.lifecycleScope.launch {
+            ReviewRepository.add(userId, item!!, rating, comment.trim(), author)
+            AuthRepository.addLoyaltyPoints(userId, LoyaltyRules.POINTS_PER_REVIEW)
 
-        binding.ratingBar.rating = 0f
-        binding.etComment.setText("")
-        Snackbar.make(
-            binding.root,
-            "Thanks for your review! +${LoyaltyRules.POINTS_PER_REVIEW} loyalty points",
-            Snackbar.LENGTH_LONG
-        ).show()
+            binding.ratingBar.rating = 0f
+            binding.etComment.setText("")
+            loadReviews()
+            Snackbar.make(
+                binding.root,
+                "Thanks for your review! +${LoyaltyRules.POINTS_PER_REVIEW} loyalty points",
+                Snackbar.LENGTH_LONG
+            ).show()
+        }
     }
 
     override fun onDestroyView() {

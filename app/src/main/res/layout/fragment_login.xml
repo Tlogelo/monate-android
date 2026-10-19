@@ -86,6 +86,15 @@
             android:text="Log in"
             android:textSize="16sp" />
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnGoogle"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="10dp"
+            android:text="Continue with Google"
+            android:textSize="16sp" />
+
         <ProgressBar
             android:id="@+id/progress"
             android:layout_width="wrap_content"

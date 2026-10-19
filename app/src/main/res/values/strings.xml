@@ -1,3 +1,17 @@
 <resources>
     <string name="app_name">MonateChickenSteak</string>
+
+    <!-- Business details shown on Home and Help & Support. Edit these to the real details.
+         Leave address / social links empty ("") to hide them in the app. -->
+    <string name="business_phone">0123456789</string>
+    <string name="business_phone_display">012 345 6789</string>
+    <string name="business_email">info@monate.co.za</string>
+    <string name="business_address"></string>
+    <string name="business_facebook_url"></string>
+    <string name="business_instagram_url"></string>
+    <string name="business_about">Monate Chicken &amp; Steak is the home of Chisa Nyama: flame-grilled chicken, juicy steak, wings and more. Order ahead in the app, pick your collection time and earn loyalty points on every order.</string>
+    <string name="business_hours">Monday to Thursday  11:00 - 22:00\nFriday and Saturday  11:00 - 23:00\nSunday  11:00 - 21:00</string>
+
+    <!-- Google single sign-on. Replace with your Web client ID, see docs/SSO_SETUP.md -->
+    <string name="google_web_client_id" translatable="false">1086089905792-vn41d0r9qknvalkrhbg9v6790l42ssj8.apps.googleusercontent.com</string>
 </resources>

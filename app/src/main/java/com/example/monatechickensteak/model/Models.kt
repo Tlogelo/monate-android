@@ -6,8 +6,7 @@ data class FoodItem(
     val category: String,
     val description: String,
     val price: Double,
-    val emoji: String,
-    val imageUrl: String? = null
+    val emoji: String
 )
 
 data class CartItem(
@@ -23,7 +22,6 @@ enum class OrderStatus(val label: String) {
     READY("Ready"),
     DELIVERED("Delivered")
 }
-
 
 data class Review(
     val id: Int,
@@ -48,6 +46,27 @@ data class User(
     val id: Int,
     val name: String,
     val email: String,
-    val loyaltyPoints: Int = 0
+    val loyaltyPoints: Int = 0,
+    /** "password" for accounts created in the app, "google" for Google single sign-on. */
+    val provider: String = "password"
 )
 
+data class Reward(
+    val id: Int,
+    val name: String,
+    val cost: Int,
+    val emoji: String
+)
+
+data class Promotion(
+    val id: Int,
+    val title: String,
+    val description: String,
+    val emoji: String
+)
+
+data class Faq(
+    val id: Int,
+    val question: String,
+    val answer: String
+)

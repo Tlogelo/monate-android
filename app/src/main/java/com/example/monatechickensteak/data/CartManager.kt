@@ -7,20 +7,21 @@ import com.example.monatechickensteak.model.FoodItem
 
 object CartManager {
 
-    const val DELIVERY_FEE = 25.0
+    const val DELIVERY_FEE = SeedData.DELIVERY_FEE
 
     private val _items = MutableLiveData<List<CartItem>>(emptyList())
     val items: LiveData<List<CartItem>> = _items
 
     private fun current(): List<CartItem> = _items.value ?: emptyList()
 
-    fun add(food: FoodItem) {
+    fun add(food: FoodItem, quantity: Int = 1) {
+        if (quantity < 1) return
         val list = current().toMutableList()
         val index = list.indexOfFirst { it.item.id == food.id }
         if (index >= 0) {
-            list[index] = list[index].copy(quantity = list[index].quantity + 1)
+            list[index] = list[index].copy(quantity = list[index].quantity + quantity)
         } else {
-            list.add(CartItem(food, 1))
+            list.add(CartItem(food, quantity))
         }
         _items.value = list
     }

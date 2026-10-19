@@ -1,42 +1,25 @@
 package com.example.monatechickensteak.data
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import com.example.monatechickensteak.model.Review
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
-/** MOCK review box. Will call the API later; the screens will not change. */
 object ReviewRepository {
 
-    private const val FIRST_ID = 100
+    lateinit var store: ReviewStore
 
-    private val _reviews = MutableLiveData<List<Review>>(seed())
-    val reviews: LiveData<List<Review>> = _reviews
+    /** All reviews, newest first. */
+    suspend fun all(): List<Review> = withContext(Dispatchers.IO) { store.all() }
 
-    private var nextId = FIRST_ID
+    suspend fun add(userId: Int, itemName: String, rating: Int, comment: String, author: String): Review =
+        withContext(Dispatchers.IO) {
+            val date = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date())
+            store.insert(userId, itemName, rating, comment, author, date)
+        }
 
-    private fun seed(): List<Review> = listOf(
-        Review(3, "Malva Pudding", 5, "Best malva in town.", "Thabo N.", "05 Oct 2026"),
-        Review(2, "Chips", 4, "Crispy, could use a bit more salt.", "Lerato K.", "03 Oct 2026"),
-        Review(1, "Quarter Chicken", 5, "Juicy and full of flavour!", "Sipho M.", "02 Oct 2026")
-    )
-
-    fun add(itemName: String, rating: Int, comment: String, author: String): Review {
-        val date = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date())
-        val review = Review(nextId++, itemName, rating, comment, author, date)
-        _reviews.value = listOf(review) + (_reviews.value ?: emptyList())
-        return review
-    }
-
-    fun averageRating(): Double {
-        val list = _reviews.value.orEmpty()
-        return if (list.isEmpty()) 0.0 else list.map { it.rating }.average()
-    }
-
-    fun reset() {
-        _reviews.value = emptyList()
-        nextId = FIRST_ID
-    }
+    fun averageRating(reviews: List<Review>): Double =
+        if (reviews.isEmpty()) 0.0 else reviews.map { it.rating }.average()
 }
