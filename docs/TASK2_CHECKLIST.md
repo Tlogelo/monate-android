@@ -12,16 +12,18 @@ Status key: **Done** = implemented and checked, **Check** = implemented but need
 | Requirement | Status | Where / how |
 |---|---|---|
 | Working Android app on GitHub | Done (code) | this repository |
-| Runs on a **real phone**, not only an emulator | **Check** | Build and run on a phone (README > Run the app); record this for the demo |
+| Runs on a **real phone**, not only an emulator | Done | Built and run on a physical Android phone (README > Run the app); record this for the demo |
 | Update the website | **Team** | the website is not part of this repository |
 | Use DevOps | Done / **Team** | GitHub Actions workflow; keep the Azure DevOps board updated (below) |
 | User support: help system | Done | Profile > Help & Support: quick guides, FAQs (database), call/email, message form |
 | User support: user documentation | Done | [USER_GUIDE.md](USER_GUIDE.md) |
-| Register / log in with **encrypted password** | Done | PBKDF2-HMAC-SHA256, 120 000 rounds, random salt per user (`PasswordHasher`); tests in `AuthTests` |
-| **SSO** | **Check** | Google sign-in implemented; needs the Web client ID, see [SSO_SETUP.md](SSO_SETUP.md) |
+| Register / log in with **encrypted password** | Done | Firebase Authentication stores salted password hashes online; the app keeps no password copy (`FirebaseCredentialAuth`). Local PBKDF2-HMAC-SHA256 hashing (`PasswordHasher`) remains for the offline test path; tests in `AuthTests` and `OnlineAuthTest` |
+| **SSO** | Done | Google sign-in through Credential Manager, verified online by Firebase; see [SSO_SETUP.md](SSO_SETUP.md). Accounts show in Firebase console > Authentication > Users |
+| **Online-hosted authentication service** | Done | Firebase Authentication (free Spark plan); show the Users list in the demo |
+| **Online-hosted API and database** | **Team** | Not done: orders, points, reviews and the menu are in the on-device SQLite database. Confirm with the lecturer whether Firebase Authentication plus SQLite is enough, or whether a hosted API/database (for example Firestore or the team's Flask/MySQL service) is expected |
 | Settings | Done | Profile > Settings: notifications, default collection time, default payment, delete account |
 | Database with **10+ records per table** | Done | 11 tables, see [DATABASE.md](DATABASE.md); proven by `SeedDataTest` and `DatabaseTest` |
-| **GitHub Actions** automated testing | Done | `.github/workflows/android.yml`, 91 unit tests, results table in each run summary |
+| **GitHub Actions** automated testing | Done | `.github/workflows/android.yml`, 103 unit tests passing, results table in each run summary, debug APK uploaded as an artifact |
 | Azure DevOps updates | **Team** | move the Task 2 work items on the board (suggested items below) |
 | Demo video with voice-over | **Team** | suggested script below |
 | Regular team meetings | **Team** | keep short minutes (date, who attended, decisions) as evidence |
@@ -34,7 +36,8 @@ Status key: **Done** = implemented and checked, **Check** = implemented but need
 | No item details screen (plan 8.2) | New Item details screen with quantity, reviews |
 | All data was in memory: lost on restart, and **every customer saw the same orders and points** | SQLite database, orders/points/reviews saved per customer |
 | Password hashing used PBKDF2-SHA1 with only 10 000 rounds | PBKDF2-SHA256, 120 000 rounds, rounds stored with the hash, constant-time compare (minSdk raised 24 to 26) |
-| No SSO although a Google library was listed | Google sign-in with Credential Manager |
+| No SSO although a Google library was listed | Google sign-in with Credential Manager, then verified by Firebase |
+| Accounts and passwords existed only on the phone (nothing online) | Login moved to Firebase Authentication (email/password and Google); orders and points stay on the phone |
 | Settings had one switch that did nothing | Notifications really sent, default time/payment used at checkout, delete account |
 | Help was a static list inside the code | FAQs from the database, quick guides, messages saved to the database, user guide document |
 | README claimed Retrofit/Flask/MySQL that the app never used, and listed "Mentor" as a role (it is a team member's first name) | README rewritten to match the code and the team table |
@@ -65,8 +68,9 @@ Status key: **Done** = implemented and checked, **Check** = implemented but need
 Please decide how to word these in the report:
 
 1. **Back end / database technology.** The plan says Python/Flask + MySQL (and the WBS table says Node.js/MySQL).
-   The app uses an on-device SQLite database behind repository classes, so it runs on a phone with no server.
-   Moving to a Flask/MySQL API later only means replacing the classes in `data/db/`.
+   The app uses **Firebase Authentication** (online) for login and an on-device SQLite database behind repository
+   classes for everything else, so the only online part is the login. Moving orders and reviews to a Flask/MySQL API
+   or to Firestore later means replacing the classes in `data/db/` and the repositories in `data/`.
 2. **Team spelling.** The plan's team table spells names differently from the cover page
    (for example "Tshomologo"/"Makwena" vs "Tshimologo"/"Mmakwena") and one student number differs
    (`St10458052` in the table vs `ST104588052` on the cover).
@@ -80,8 +84,8 @@ Home dashboard, GitHub Actions testing, User documentation, Demo video, Website 
 ## Suggested demo-video order (about 5 minutes, with voice-over)
 
 1. GitHub repository and the green GitHub Actions run (open the test summary table).
-2. Register a new user, then log out and log in; mention the hashed password.
-3. Continue with Google.
+2. Register a new user, then log out and log in; show the user in Firebase console > Authentication > Users.
+3. Continue with Google; show the second user with the Google icon.
 4. Home, Menu, item details, add to cart, checkout.
 5. Orders: advance the status with the demo button and show the notification.
 6. Loyalty rewards, review, Settings (default time and payment), Help & Support.
@@ -89,7 +93,11 @@ Home dashboard, GitHub Actions testing, User documentation, Demo video, Website 
 
 ## Known limitations
 
-- The Google ID token is not verified by a server (there is no server); see SSO_SETUP.md.
+- Only the login is online (Firebase). Orders, points, reviews and the menu are on the phone, so a second phone sees the
+  account but not its orders.
+- Logging in, registering, changing a password and deleting an account need an internet connection.
+- The sample customers are local records; to log in as one, add the same email in Firebase (Authentication > Add user).
+- Google sign-in only works on computers whose debug SHA-1 is registered in the Firebase project (see SSO_SETUP.md).
 - The **Demo: next status** button stands in for the kitchen staff app.
 - The R25 fee is charged on every order, including collection orders (existing behaviour, not changed).
 - Sample promotions and sample customers are demo content.

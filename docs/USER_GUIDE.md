@@ -2,7 +2,7 @@
 
 Order your favourite chicken and steak ahead of time, pick when you will collect it and earn rewards on every order.
 
-**You need:** an Android phone (Android 8.0 or newer) and an internet-free install of the app (the app keeps its data on your phone).
+**You need:** an Android phone (Android 8.0 or newer) and an internet connection when you register, log in, change your password or delete your account. The rest of the app keeps its data on your phone and works without a connection.
 
 ---
 
@@ -11,14 +11,14 @@ Order your favourite chicken and steak ahead of time, pick when you will collect
 **Create an account**
 1. On the login screen tap **New here? Create an account**.
 2. Enter your name, email and a password, then confirm the password.
-3. Tap **Register**. You are logged in straight away.
+3. Tap **Register**. Your account is created online and you are logged in straight away.
 
 Your password must have at least 8 characters with an uppercase letter, a lowercase letter, a number and a symbol (for example `Monate@123`).
-Passwords are never saved as plain text.
+Your password is stored securely online by Google Firebase, never as plain text, and the app does not keep a copy.
 
-**Log in**: enter your email and password and tap **Log in**.
+**Log in**: enter your email and password and tap **Log in** (this needs an internet connection).
 
-**Log in with Google**: tap **Continue with Google** and choose your Google account. No password is needed. The first time, an account is created for you.
+**Log in with Google**: tap **Continue with Google** and choose your Google account. No password is needed and Google confirms it is really you. The first time, an account is created for you.
 
 **Log out**: Profile > **Log out**.
 
@@ -67,7 +67,7 @@ Profile lets you change your **name** and **password** (not for Google accounts)
 Under **Settings** you can:
 - switch **order status notifications** on or off (Android 13 and newer ask for permission the first time),
 - choose a **default collection time** and **default payment method** for checkout,
-- **Delete my account**: removes your account, orders and points permanently.
+- **Delete my account**: removes your account, orders and points permanently. If the app says it could not delete the account and asks you to log in again, log in once more and repeat the step.
 
 ## 9. Getting help
 
@@ -79,6 +79,9 @@ and a box to **send us a message**.
 | Problem | What to try |
 |---|---|
 | "Incorrect email or password" | Check for typos; passwords are case sensitive. |
+| "An account with this email already exists" | Log in instead. If you first signed in with Google, use **Continue with Google**. |
+| "No connection. Check your internet and try again." | Connect to Wi-Fi or mobile data and try again. Only logging in, registering, changing your password and deleting your account need a connection. |
+| "Too many attempts. Please wait a minute and try again." | Wait a minute before logging in again. |
 | "This account uses Google sign-in" | Use **Continue with Google** for that email. |
 | "No Google account found on this phone" | Add a Google account in your phone's settings. |
 | No notifications | Profile > Settings > turn **Order status notifications** on, and allow notifications for the app in the phone's settings. |
